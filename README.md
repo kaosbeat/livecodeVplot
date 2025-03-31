@@ -16,9 +16,10 @@ Live coding a Vplotter should be as easy as sendinng some commands. The very bar
 1. pen up
 2. pen down
 3. getCurrentPos
-4. gotoXY
-5. calibrate/config
-6. reset
+4. moveXY_Absolute
+5. moveXY_Relative
+6. calibrate/config
+7. reset
 
 All other commands should be implemented on the livecoding side, probably a python REPL or similar, and should be macros of these commands
 
