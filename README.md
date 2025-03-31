@@ -7,7 +7,7 @@ https://github.com/patriciogonzalezvivo/vPlotter?tab=readme-ov-file
 https://github.com/rottaca/VPlotter  
 https://github.com/tinkerlog/Kritzler  
 https://github.com/MarginallyClever/Makelangelo-firmware  
-
+https://www.2e5.com/plotter/V/design/  
 
 # arduino software
 Live coding a Vplotter should be as easy as sendinng some commands. The very bare commands we need are
