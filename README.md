@@ -3,10 +3,10 @@ Live codeable Vplotter
 
 
 # reference projects
-https://github.com/patriciogonzalezvivo/vPlotter?tab=readme-ov-file
-https://github.com/rottaca/VPlotter
-https://github.com/tinkerlog/Kritzler
-
+https://github.com/patriciogonzalezvivo/vPlotter?tab=readme-ov-file  
+https://github.com/rottaca/VPlotter  
+https://github.com/tinkerlog/Kritzler  
+https://github.com/MarginallyClever/Makelangelo-firmware  
 
 
 # arduino software
