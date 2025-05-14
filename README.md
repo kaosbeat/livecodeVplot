@@ -2,6 +2,12 @@
 Live codeable Vplotter
 
 
+GRBL needs to stream
+https://onehossshay.wordpress.com/2011/08/26/grbl-a-simple-python-interface/
+
+is buffer is full, wait...
+python buffer
+
 # reference projects
 https://github.com/patriciogonzalezvivo/vPlotter?tab=readme-ov-file
 https://github.com/rottaca/VPlotter
@@ -10,7 +16,7 @@ https://github.com/tinkerlog/Kritzler
 
 
 # arduino software
-Live coding a Vplotter should be as easy as sendinng some commands. The very bare commands we need are
+Live coding a Vplotter should be as easy as sending some commands. The very bare commands we need are
 
 ## commands
 1. pen up
