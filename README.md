@@ -9,11 +9,11 @@ is buffer is full, wait...
 python buffer
 
 # reference projects
-https://github.com/patriciogonzalezvivo/vPlotter?tab=readme-ov-file
-https://github.com/rottaca/VPlotter
-https://github.com/tinkerlog/Kritzler
-
-
+https://github.com/patriciogonzalezvivo/vPlotter?tab=readme-ov-file  
+https://github.com/rottaca/VPlotter  
+https://github.com/tinkerlog/Kritzler  
+https://github.com/MarginallyClever/Makelangelo-firmware  
+https://www.2e5.com/plotter/V/design/  
 
 # arduino software
 Live coding a Vplotter should be as easy as sending some commands. The very bare commands we need are
@@ -22,9 +22,10 @@ Live coding a Vplotter should be as easy as sending some commands. The very bare
 1. pen up
 2. pen down
 3. getCurrentPos
-4. gotoXY
-5. calibrate/config
-6. reset
+4. moveXY_Absolute
+5. moveXY_Relative
+6. calibrate/config
+7. reset
 
 All other commands should be implemented on the livecoding side, probably a python REPL or similar, and should be macros of these commands
 
