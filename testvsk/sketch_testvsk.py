@@ -32,28 +32,40 @@ class TestvskSketch(vsketch.SketchClass):
         y=0
         dx=0
         dy=0
-        for i in range(depth):
-            h = self.vsk.random(0,2)
-            v = self.vsk.random(0,2)
-            if h > 1:
+        for i in range(depth+2):
+            d = int(self.vsk.random(0,2))
+            if d == 0:
                 dx = self.vsk.random(0,size)
-            if v < 1:
-                dy = self.vsk.random(0,size) 
+            if d == 1:
+                dy = self.vsk.random(0,size)
+            if d == 2:
+                dx = self.vsk.random(0,size)
+                dy = self.vsk.random(0,size)
+            # h = self.vsk.random(0,2)
+            # v = self.vsk.random(0,2)
+            # if h > 1:
+            #     dx = self.vsk.random(0,size)
+            # if v < 1:
+            #     dy = self.vsk.random(0,size) 
             self.vsk.line(x,y,dx,dy)
             x=dx
             y=dy
         return jsquare 
         
     def squarestudy(self, vsk: vsketch.Vsketch):
+        W = self.columns
+        H = self.rows
         print("squarestudy")
-        size = self.size        
-        for w in range(1):
-            for h in range(12):
-                shape = self.jsq(w+h, size)
+        size = self.size
+        for h in range(H):
+            vsk.translate( 0, size)
+            for w in range(W):
+                vsk.translate(size, 0)
+                shape = self.jsq(h+w, size)
                 vsk.stroke(1)
                 vsk.fill(2)
                 vsk.shape(shape)
-
+            vsk.translate(-W*size, 0)
 
     def petals(self, vsk: vsketch.Vsketch):
         for x in range(0,self.size):
