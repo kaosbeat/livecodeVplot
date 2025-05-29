@@ -1,5 +1,6 @@
 import vsketch
-
+import math
+from lib.blocks import *
 
 class KaosSketch(vsketch.SketchClass):
     # Sketch parameters:
@@ -7,19 +8,31 @@ class KaosSketch(vsketch.SketchClass):
     size = vsketch.Param(1.0)
     W = vsketch.Param(20)
     H = vsketch.Param(20)
-    noiselod = vsketch.Param(1)
+    noiselod = vsketch.Param(1) 
+    papersize = "1000mmx2000mm"
 
     def draw(self, vsk: vsketch.Vsketch) -> None:
-        vsk.size("a3", landscape=True)
-        vsk.scale("mm")
+        # vsk.size("a3", landscape=False)
+        vsk.scale("mm") 
 
-        # self.circlegrid(vsk)                           
-        self.squaresgrid(vsk)
-        self.finalize(vsk)
+        vsk.size(self.papersize, landscape=False, center=False)
+        vsk.rectMode("corners")
+        self.circlegrid(vsk)                           
+        # self.squaresgrid(vsk)
+        vsk.pushMatrix() 
+        # vsk.translate(300,400)
+        # filledSquares(vsk, 10, 250, 300, 20)
+        # stackSquares(vsk, 10, 205, 10, 100)
+        # blockline (vsk, 100, 10, 10, 2000, 3, 1, 1)
+        
+        # self.blocks(vsk, 100, 100, 200, 20)
+        vsk.popMatrix()
+        self.finalize(vsk) 
                 
     def finalize(self, vsk: vsketch.Vsketch) -> None:
-        vsk.vpype("linemerge linesimplify reloop linesort")
-        vsk.save("squares.hpgl", "dxy", paper_size="a3")
+        # vsk.vpype("linemerge linesimplify reloop linesort")
+        # vsk.save("squares.hpgl", "dxy", paper_size="a3")
+        vsk.save("blocks.svg", paper_size=self.papersize)
 
     def circlegrid(self, vsk):
         # # Sketch parameters:
@@ -44,16 +57,28 @@ class KaosSketch(vsketch.SketchClass):
             for h in range(self.H):
                 vsk.circle(w*self.size, h*self.size, self.radius*vsk.noise(w,h), mode="radius")
                 
-    def squaresgrid(self, vsk):
-        done = False
-        totalsizeX=297
-        totalsizeY=420
-        totalX = totalsizeX
-        totalY = totalsizeY
-        vsk.stroke(1)
-        subdivpattern(vsk,0,0,250,250,3,1)
-        vsk.stroke(1)
-        subdivpattern(vsk,0,0,250,250,3,1)
+    # def squaresgrid(self, vsk):
+    #     done = False
+    #     totalsizeX=297
+    #     totalsizeY=420
+    #     totalX = totalsizeX
+    #     totalY = totalsizeY
+    #     vsk.stroke(1)
+    #     subdivpattern(vsk,0,0,250,250,3,1)
+    #     vsk.stroke(1)
+    #     subdivpattern(vsk,0,0,250,250,3,1)
+
+
+
+def blockline (vsk, x1, y1, x2, y2, subdiv, blockfunc, blockfuncargs):
+    rc = (x2-x1)/(y2-y1)
+    length = math.sqrt((x2-x1)**2+(y2-y1)**2)
+    for i in range(10):
+        x = length/10*i*rc
+        y = length/10*i/rc
+        vsk.rectMode("corner")
+        vsk.rect(x,y, 50,50)
+
 
 
 if __name__ == "__main__":
