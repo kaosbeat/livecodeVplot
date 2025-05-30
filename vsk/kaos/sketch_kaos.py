@@ -4,12 +4,12 @@ from lib.blocks import *
 
 class KaosSketch(vsketch.SketchClass):
     # Sketch parameters:
-    radius = vsketch.Param(1.0)
-    size = vsketch.Param(1.0)
-    W = vsketch.Param(20)
+    radius = vsketch.Param(59.0)
+    size = vsketch.Param(40.0)
+    W = vsketch.Param(14)
     H = vsketch.Param(20)
     noiselod = vsketch.Param(1) 
-    papersize = "1000mmx2000mm"
+    papersize = "790mmx1720mm"
 
     def draw(self, vsk: vsketch.Vsketch) -> None:
         # vsk.size("a3", landscape=False)
@@ -17,10 +17,10 @@ class KaosSketch(vsketch.SketchClass):
 
         vsk.size(self.papersize, landscape=False, center=False)
         vsk.rectMode("corners")
+        vsk.pushMatrix() 
+        vsk.translate(100,200)
         self.circlegrid(vsk)                           
         # self.squaresgrid(vsk)
-        vsk.pushMatrix() 
-        # vsk.translate(300,400)
         # filledSquares(vsk, 10, 250, 300, 20)
         # stackSquares(vsk, 10, 205, 10, 100)
         # blockline (vsk, 100, 10, 10, 2000, 3, 1, 1)
@@ -46,12 +46,12 @@ class KaosSketch(vsketch.SketchClass):
         for w in range(self.W):
             for h in range(self.H):
                 vsk.circle(w*self.size, h*self.size, self.radius*vsk.noise(w,h), mode="radius")
-        vsk.stroke(2)
+        vsk.stroke(1)
         vsk.noiseSeed(2)
         for w in range(self.W):
             for h in range(self.H):
                 vsk.circle(w*self.size, h*self.size, self.radius*vsk.noise(w,h), mode="radius")
-        vsk.stroke(3)
+        vsk.stroke(1)
         vsk.noiseSeed(3)
         for w in range(self.W):
             for h in range(self.H):
