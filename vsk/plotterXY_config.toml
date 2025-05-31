@@ -1,0 +1,48 @@
+# Document-level configuration. These settings control the machine's
+# behavior between layer operations. All layers inherit these values
+# unless specifically overridden in their [layer-X] section.
+
+
+# https://vpype-mecode.readthedocs.io/en/latest/gcode-table.html
+
+
+[document]
+length-units = "millimeters" # Using metric units
+tool-type = "marker"         # Using marker mode for pen plotting
+rack-type = "manual"         # Manual tool changes for different pens
+travel-speed = "3000mm"      # Speed for non-drawing moves
+safe-z = "1cm"               # Safe height for non-drawing moves
+plunge-z = "1mm"             # Height at which to begin plunging
+
+# Speeds in units per minute
+
+work-speed = "500.0mm"          # Speed during operations
+plunge-speed = "100.0mm"        # Speed when tool enters material
+travel-speed = "1000.0mm"       # Speed between operations
+
+
+
+# Z-axis heights
+work-z = "2.0mm"                # Z height during operations
+plunge-z = "1.0mm"              # Z height for initial material contact
+safe-z = "0.0mm"               # Z height for movements between operations
+park-z = "0.0mm"               # Z height when parked
+
+
+# Settings for first layer (black fine liner)
+
+[layer-1]
+work-speed = "1200mm"        # Faster speed for simple lines
+plunge-speed = "500mm"       # Gentle pen lowering speed
+
+# Settings for second layer (red marker)
+
+[layer-2]
+work-speed = "800mm"         # Slower for better ink flow
+plunge-speed = "400mm"       # Gentler pen lowering for softer tip
+
+# Settings for third layer (thick marker)
+
+[layer-3]
+work-speed = "600mm"         # Even slower for thick lines
+plunge-speed = "50mm"        # Very gentle pen lowering

@@ -49,3 +49,16 @@ def stackSquares(vsk, x, y, size, count):
     #     vsk.rect(-2, -2, 2, 2)
     #     vsk.popMatrix()
     #     vsk.translate(5, 0)
+
+
+def lineflower(x,y,size,segments,ftype):
+    segs = []
+    if (ftype == "flower"):
+        for i in range(segments):
+            segs.append([x,y,vsk.random(0.5*size, size), vsk.random(0.5,size)])
+
+    vsk.pushMatrix()
+    for seg in segs:
+    # vsk.translate(x,y)
+        vsk.line(seg[0],seg[1],seg[2],seg[3])
+    vsk.popMatrix()
