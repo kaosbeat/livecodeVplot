@@ -9,7 +9,7 @@ class KaosSketch(vsketch.SketchClass):
     W = vsketch.Param(14)
     H = vsketch.Param(20)
     noiselod = vsketch.Param(1) 
-    papersize = "790mmx1720mm"
+    papersize = "740mmx1760mm"
 
     def draw(self, vsk: vsketch.Vsketch) -> None:
         # vsk.size("a3", landscape=False)
@@ -19,13 +19,16 @@ class KaosSketch(vsketch.SketchClass):
         vsk.rectMode("corner")
         vsk.pushMatrix() 
         vsk.translate(0,0)
-        vsk.penWidth("0.5mm")
-        vsk.fill(1)
+        # vsk.penWidth("0.5mm")
+        # vsk.fill(1)
         vsk.rect(100,200,50,50)
+        vsk.text("topleft", 100, 200)
         # vsk.rect(10,0,50,50)
         vsk.rect(600,0,50,250)
         vsk.rect(0,1500,150,50)
         vsk.rect(600,1500,150,150)
+        vsk.text("bottomright", 600, 1500)
+        
         # self.circlegrid(vsk)                           
         # self.squaresgrid(vsk)
         # filledSquares(vsk, 10, 250, 300, 20)
