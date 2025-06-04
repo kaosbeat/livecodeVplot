@@ -15,7 +15,11 @@ rack-type = "manual"         # Manual tool changes for different pens
 
 work-speed = "2500.0mm"          # Speed during operations
 plunge-speed = "2500.0mm"        # Speed when tool enters material
+<<<<<<< HEAD
 travel-speed = "4000.0mm"       # Speed between operations
+=======
+travel-speed = "5000.0mm"       # Speed between operations
+>>>>>>> e1e21b1aa6482b92a5847c169f78af2bd3148bcb
 
 
 
