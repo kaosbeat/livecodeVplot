@@ -13,24 +13,20 @@ rack-type = "manual"         # Manual tool changes for different pens
 
 # Speeds in units per minute
 
-work-speed = "2500.0mm"          # Speed during operations
-plunge-speed = "2500.0mm"        # Speed when tool enters material
-<<<<<<< HEAD
-travel-speed = "4000.0mm"       # Speed between operations
-=======
-travel-speed = "5000.0mm"       # Speed between operations
->>>>>>> e1e21b1aa6482b92a5847c169f78af2bd3148bcb
+work-speed = "8000.0mm"          # Speed during operations
+plunge-speed = "8000.0mm"        # Speed when tool enters material
+travel-speed = "8000.0mm"       # Speed between operations
 
 
 
 # Z-axis heights
-work-z = "2.0mm"                # Z height during operations
-plunge-z = "2.0mm"              # Z height for initial material contact
-safe-z = "5.0mm"               # Z height for movements between operations
-park-z = "6.0mm"               # Z height when parked
+work-z = "1mm"                # Z height during operations
+plunge-z = "1mm"              # Z height for initial material contact
+safe-z = "5mm"               # Z height for movements between operations
+park-z = "6mm"               # Z height when parked
 
 
-# Settings for first layer (black fine liner)
+# Settings for first layer (black   fine liner)
 
 #[layer-1]
 #work-speed = "1200mm"        # Faster speed for simple lines

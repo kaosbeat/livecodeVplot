@@ -12,7 +12,9 @@ from pythonosc.osc_server import AsyncIOOSCUDPServer
 from pythonosc.dispatcher import Dispatcher
 # from lib.midiinitiutil import available_inports_list
 # from lib.midiparser import parseMsg, connectMidi
-ser = serial.Serial('/dev/ttyUSB0', 115200, timeout=2)
+ser = serial.Serial(config["serial"]["dev"], config["serial"]["speed"], timeout=config["serial"]["timeout"])
+from vectorfuncs import *
+from motionfuncs import *
 
 oscip = config["osc"]["ip"]
 oscport = config["osc"]["port"]
@@ -20,32 +22,38 @@ oscloop = False
 
 BAUD_RATE = 115200
 
-curX=0
-curY=0
-minX=0
-minY=0
-maxX=780
-maxY=1720
-fspeed=8000
+
+
+state={
+    'curX':0,
+    'curY':0,
+    'mode':'init',
+}
+
+minX= config["plotter"]["minX"]
+minY= config["plotter"]["minY"]
+maxX = config["plotter"]["maxX"]
+maxY = config["plotter"]["maxY"]
+fspeed =  config["plotter"]["fspeed"]
 
 
 
 
 
 def checkLimits(x,y):
-    global curX,curY,minX,minY,maxX,maxY
-    print("X = ", curX + x)
-    print("Y = ", curY + y) 
-    if (not (minX < curX + x < maxX)) or (not (minY < curY + y < maxY)):
+    global state, config
+    print("X = ", state['curX'] + x)
+    print("Y = ", state['curY'] + y) 
+    if (not (config['plotter']['minX'] < state['curX'] + x < config['plotter']['maxX'])) or (not (config['plotter']['minY'] < state['curY'] + y < config['plotter']['maxY'])):
         print("out of limits!")
         return False
     return True
 
 def checkLimitsAbs(x,y):
-    global curX,curY,minX,minY,maxX,maxY
+    global state, config
     print("X = ", x)
     print("Y = ", y) 
-    if (not (minX < x < maxX)) or (not (minY < y < maxY)):
+    if (not (config['plotter']['minX'] < x < config['plotter']['maxX'])) or (not (config['plotter']['minY'] < y < config['plotter']['maxY'])):
         print("out of limits!")
         return False
     return True
@@ -63,7 +71,7 @@ def remove_eol_chars(string):
     return string.strip()
 
 def wait_for_movement_completion(ser,cleaned_line):
-    Event().wait(0.5)
+    Event().wait(0.005)
     if cleaned_line != '$X' or '$$':
         idle_counter = 0
         while True:
@@ -82,23 +90,23 @@ def wait_for_movement_completion(ser,cleaned_line):
 
 def stream_gcode(ser,gcode):
     # with contect opens file/connection and closes it if function(with) scope is left
-        # send_wake_up(ser)
-        for line in gcode.splitlines():
-            # cleaning up gcode from file
-            cleaned_line = remove_eol_chars(remove_comment(line))
-            # print(line)
-            if cleaned_line:  # checks if string is empty
-                print("Sending gcode:" + str(cleaned_line))
-                # converts string to byte encoded string and append newline
-                command = str.encode(line + '\n')
-                ser.write(command)  # Send g-code
-                wait_for_movement_completion(ser,cleaned_line)
-                grbl_out = ser.readline()  # Wait for response with carriage return
-                print(" : " , grbl_out.strip().decode('utf-8'))
-        print('End of gcode')
+    # send_wake_up(ser)
+    for line in gcode.splitlines():
+        # cleaning up gcode from file
+        cleaned_line = remove_eol_chars(remove_comment(line))
+        # print(line)
+        if cleaned_line:  # checks if string is empty
+            print("Sending gcode:" + str(cleaned_line))
+            # converts string to byte encoded string and append newline
+            command = str.encode(line + '\n')
+            ser.write(command)  # Send g-code
+            wait_for_movement_completion(ser,cleaned_line)
+            grbl_out = ser.readline()  # Wait for response with carriage return
+            print(" : " , grbl_out.strip().decode('utf-8'))
+    print('End of gcode')
 
 def initPlotter():
-    global curX,curY,minX,minY,maxX,maxY
+    global state, config    
     gcode='''
         G21 ; millimeters
         G90 ; absolute coordinate
@@ -113,9 +121,10 @@ def initPlotter():
     # response = ser.readline()
     # print(response.decode())
     # ser.close()
-    print("xy=", curX, curY )
-    print("limits minXY=", minX , minY )
-    print("limits maxXY=", maxX , maxY )
+    print("xy=", state['curX'], state['curY'] )
+    print("limits minXY=", config['plotter']['minX'] , config['plotter']['minY'] )
+    print("limits maxXY=", config['plotter']['maxX'] , config['plotter']['maxY'] )
+    state['mode'] = 'ready'
 
 def initPen():
     gcode = '''
@@ -135,7 +144,6 @@ def placePen():
         G21 Z5 F1000;
         '''
     stream_gcode(ser,gcode)
-    
     # ser.write(gcode.encode())
     # response = ser.readline()
     # print("pen placed :" + response.decode())
@@ -152,23 +160,31 @@ def liftPen():
     # print("pen lifted :" + response.decode())
 
 
-def goto(x,y):
-    global curX,curY,minX,minY,maxX,maxY,fspeed
+def goto(x,y, speed=None):
+    global state, config    
+    # global curX,curY,minX,minY,maxX,maxY,fspeed
+    if speed == None:
+        speed = config["plotter"]['fspeed']
     liftPen()
     print("gotoX = ", x)
     print("gotoY = ", y) 
+    print("gotospeed =", speed)
     if checkLimitsAbs(x,y):
-        gcode = "G90 \n G0 X%d Y%d F%d" %(x,y,fspeed )
+        gcode = "G90 \n G0 X%d Y%d F%d" %(x,y,speed )
         # print(gcode)
         stream_gcode(ser,gcode)
         # ser.write(gcode.encode())
         # response = ser.readline()
         # print(response.decode())
-        curX=x
-        curY=y
+        state['curX']=x
+        state['curY']=y
         return True
     else:
         return False
+
+
+
+
 
     
      
@@ -196,29 +212,32 @@ def rectangle(width,height):
         # ser.close()
 
 
-def line(x,y):
+def line(x,y, speed):
     '''
      draw line from currentXY to curX+x, curY+y
     '''
-    global curX,curY,minX,minY,maxX,maxY,fspeed
+    global config, state
+    if speed == None:
+        speed = config["plotter"]['fspeed']
+    print("linespeed =", speed)
     if checkLimits(x,y):
         placePen()
         gcode='''
         ; relative mode
         G91
         ; Create line
-        G1 X0 Y0 F{fspeed}
+        G1 X0 Y0 F{speed}
         G1 X{x} Y{y}
         ; absolute mode
         G90
-        '''.format(x=x, y=y, fspeed=fspeed )
+        '''.format(x=x, y=y, speed=speed )
         stream_gcode(ser,gcode)
         
         # ser.write(gcode.encode())
         # response = ser.readline()
         # print(response.decode())
-        curX+=x
-        curY+=y
+        state['curX']+=x
+        state['curY']+=y
         # print("linecommand done:")
         # response = ser.readline()
         # print(response.decode())
@@ -244,6 +263,13 @@ async def oscPLT(oscqueue):
                 print("playing OSCloop", str(oscqueue.qsize()), str(oscloop))
                 plt = oscqueue.get()
                 print(plt)
+                if plt["cmd"] == "mode":
+                    if state["mode"] = plt["par"]
+                # else:
+                #     if state["mode"] = "control"
+                #         if plt["cmd"] == ""
+                
+
                 with oscqueue.mutex:
                     oscqueue.queue.clear()
                 # await asyncio.sleep(line["transition"]/1000)
@@ -251,7 +277,43 @@ async def oscPLT(oscqueue):
         await asyncio.sleep(1) 
         # print("waiting for osc") 
 
+## extra motion helper functions
 
+
+# calculate distance and time to goto
+def gotoXYinTime(x,y,ms):
+    global state, config
+    '''returns speed in mm/s needed to go to x,y in ms'''
+    print(state)
+    d = dist(state['curX'],state['curY'],x, y)
+    print("distance = ", d)
+    # time needed to accel/decel to max speed
+    t = TfromVA(config['plotter']["fspeed"], config['plotter']['accel'])
+    print("acceltime = ", t)
+    # distance traveled during accel / decel
+    da = XfromAT(config['plotter']['accel'], 2*t)
+    print("acceldistance = ", da)
+    # minimum time needed for d
+    if da > d:
+        # full speed never reached
+        #minimum time to reach d = td
+        td = TfromXA(d, config['plotter']['accel'])
+        if td > ms/1000:
+            # we cannot fulfill request
+            print(" impossible timing, minimum time in ms: ", td)
+            return config['plotter']["fspeed"]
+        if ms/1000 >= td:
+            # adjust max speed so we go slow enough
+            v = VfromXA(d,config['plotter']['accel'])
+            # not taking into account accel decel to new calc for now
+            print("speed is ", v)
+            return v
+    else:
+        # distance not covered during accel / decel at  max speed = dv
+        dv = d - da
+        # we just return the maxspeed
+        print("speed is maxspeed ", config['plotter']["fspeed"])
+        return config['plotter']["fspeed"]
 
 
 ## init Midi
@@ -261,36 +323,48 @@ print(ports)
 
 ## init plotter
 print("init plotter")
-initPlotter()
-initPen()
-goto(200,200)
+# initPlotter()
+# initPen()
+
+# print("GOING, ", gotoXYinTime(200,200,10000))
+
+# goto(200,200, gotoXYinTime(200,200,10000))
+
 # placePen()
 
-for i in range(7):
-    rectangle(i*40,i*60)
-    liftPen()
+# for i in range(10):
+    # speed = gotoXYinTime(400,400,i*500)
+    # goto(400,400, 4000)
+    # speed = gotoXYinTime(200,200,i*500)
+    # line(200,200, 4000)
+    # liftPen()
     # line(random.randint(0,100),random.randint(0,100))
-line(50,0)
+
+
+# line(50,100,gotoXYinTime(50,100,10000))
+# # goto(0,0)
+# # line(0,60)
+# # goto(0,0)
+# # line(60,60)
+# # goto(0,0)
+# # liftPen()  
+# # goto(340,-140)
+# # goto(340,140)
+# # goto(0,140)
+# # goto(0,0)
+# rectangle(100,140)
+# liftPen()
 # goto(0,0)
-# line(0,60)
-# goto(0,0)
-# line(60,60)
-# goto(0,0)
-# liftPen()  
-# goto(340,-140)
-# goto(340,140)
-# goto(0,140)
-# goto(0,0)
-rectangle(100,140)
-liftPen()
-goto(0,0)
-ser.close()
+# ser.close()
 
 async def loop():
     """Example main loop that only runs for 10 iterations before finishing"""
     for i in range(10):
         print(f"Loop {i}")
         await asyncio.sleep(1)
+    while True:
+        await asyncio.sleep(1)
+        print("waiting for cvommands")
         
 
 ## init OSC
