@@ -37,3 +37,46 @@ listening for G-code style commands, industry standards
 macros for squares/cubes/circles
 macros for dashed lines
 svg > 
+
+
+
+
+## create SVG from vsk
+
+vsk save "sketchname" --config "configname"
+
+
+## create HPGL from svg for ROLAND plotter
+
+vpype read test.svg.svg linemerge --tolerance 0.1mm linesort reloop linesimplify layout -l --fit-to-margins 1cm --page-size a3 --landscape write knota3props.svg 
+vpype read test.svg.svg linemerge --tolerance 0.1mm linesort reloop linesimplify layout -l --fit-to-margins 1cm  a3 write knota3props.svg 
+
+vpype read input.svg write --device dxy --page-size a3 --landscape output.hpgl             
+
+vpype read patterns/output/patterns_carvegrid1.svg write --device dxy --page-size a3 --landscape output.svg
+
+### fit drawing to page
+-m = margin
+vpype read patterns/output/patterns_carvegrid2.svg layout -m  3cm --landscape  a3     write --device dxy  output.hpgl
+
+### plot it
+
+#### ubuntu connect 
+1.
+sudo rfcomm release rfcomm0
+
+2.
+-Open bluetooth prefs  DONT- remove device HC06
+-reconnect
+- Connect to HC06 > pin 1234
+
+3.
+sudo rfcomm bind rfcomm0  20:13:07:25:34:59
+
+#### send to plotter via chiplotle
+
+
+
+## create GCODE file for DIY ploytter
+
+vpype read kaos/output/kata225.svg gscrib --config=plotterXY_config.toml --output=output.gcode
