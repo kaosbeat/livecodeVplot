@@ -2,6 +2,8 @@ import asyncio
 import serial
 import time 
 import random
+import pickle
+
 from threading import Event
 from threading import Thread
 from queue import Queue
@@ -12,9 +14,31 @@ from pythonosc.osc_server import AsyncIOOSCUDPServer
 from pythonosc.dispatcher import Dispatcher
 # from lib.midiinitiutil import available_inports_list
 # from lib.midiparser import parseMsg, connectMidi
-ser = serial.Serial(config["serial"]["dev"], config["serial"]["speed"], timeout=config["serial"]["timeout"])
 from vectorfuncs import *
 from motionfuncs import *
+
+
+if config["mode"] == "serial":
+    ser = serial.Serial(config["serial"]["dev"], config["serial"]["speed"], timeout=config["serial"]["timeout"])
+elif config["mode"] == "virtual":
+    ser = virtualserialports.run(1, loopback=True, debug=False)
+    # ser = "/dev/pts/2"
+
+voteconfig = {
+    turfsperline = 100
+    turfwidth = 10
+    turfheight = 40
+    turfspace = 20
+    farmy = 100
+    housey = 200
+    woodsy = 300
+    arty = 400
+    shopy = 500   
+}
+
+print("getting ready")
+
+print(ser)
 
 oscip = config["osc"]["ip"]
 oscport = config["osc"]["port"]
@@ -28,6 +52,7 @@ state={
     'curX':0,
     'curY':0,
     'mode':'init',
+    'gcode': """"""
 }
 
 minX= config["plotter"]["minX"]
@@ -37,8 +62,33 @@ maxY = config["plotter"]["maxY"]
 fspeed =  config["plotter"]["fspeed"]
 
 
+def save_object(obj, filename):
+    with open(filename, 'wb') as outp:  # Overwrites any existing file.
+        pickle.dump(obj, outp, pickle.HIGHEST_PROTOCOL)
 
+# votes = {
+#     "farm":0,
+#     "house":0,
+#     "woods":0,
+#     "art":0,
+#     "shop":0,
+#     "status":"done"
+# }
 
+votes = {}
+# save_object(votes,"votes.pickle")
+
+def loadData():
+    global votes
+    print("loading data")
+    with open("votes.pickle", 'rb') as inp:
+        votes = pickle.load(inp)
+        print(votes)
+
+def saveGCODE():
+    global state
+    with open("total.gcode", "w") as f:
+        f.write(state["gcode"])
 
 def checkLimits(x,y):
     global state, config
@@ -75,12 +125,16 @@ def wait_for_movement_completion(ser,cleaned_line):
     if cleaned_line != '$X' or '$$':
         idle_counter = 0
         while True:
-            # Event().wait(0.01)
-            ser.reset_input_buffer()
-            command = str.encode('?' + '\n')
-            ser.write(command)
-            grbl_out = ser.readline() 
-            grbl_response = grbl_out.strip().decode('utf-8')
+            if config["mode"] == "serial":
+                # Event().wait(0.01)
+                ser.reset_input_buffer()
+                command = str.encode('?' + '\n')
+                ser.write(command)
+                grbl_out = ser.readline() 
+                grbl_response = grbl_out.strip().decode('utf-8')
+            else:
+                grbl_response = 'ok'
+                idle_counter = 11
             if grbl_response != 'ok':
                 if grbl_response.find('Idle') > 0:
                     idle_counter += 1
@@ -89,6 +143,7 @@ def wait_for_movement_completion(ser,cleaned_line):
     return
 
 def stream_gcode(ser,gcode):
+    global state
     # with contect opens file/connection and closes it if function(with) scope is left
     # send_wake_up(ser)
     for line in gcode.splitlines():
@@ -99,11 +154,13 @@ def stream_gcode(ser,gcode):
             print("Sending gcode:" + str(cleaned_line))
             # converts string to byte encoded string and append newline
             command = str.encode(line + '\n')
-            ser.write(command)  # Send g-code
+            ser.write(command)  # Send g-code 
+            state["gcode"]+=(line + '\n')
             wait_for_movement_completion(ser,cleaned_line)
             grbl_out = ser.readline()  # Wait for response with carriage return
             print(" : " , grbl_out.strip().decode('utf-8'))
     print('End of gcode')
+    saveGCODE()
 
 def initPlotter():
     global state, config    
@@ -117,10 +174,12 @@ def initPlotter():
         G04P0.01 ; timeout sync
         '''
     stream_gcode(ser,gcode)
+    
+    # saveGCODE
     # ser.write(gcode.encode())
     # response = ser.readline()
     # print(response.decode())
-    # ser.close()
+    # ser.close()i
     print("xy=", state['curX'], state['curY'] )
     print("limits minXY=", config['plotter']['minX'] , config['plotter']['minY'] )
     print("limits maxXY=", config['plotter']['maxX'] , config['plotter']['maxY'] )
@@ -245,6 +304,40 @@ def line(x,y, speed):
     else:
         return False
 
+def turf(vote):
+    global config, state, votes, voteconfig
+    # first add vote to db
+    votes[vote] += 1
+    votes["status"] == "updating"
+
+    # calculate position
+    if vote == "farm":
+        ypos = voteconfig["turfheight"]*votes["farm"]//voteconfig["turfsperline"] + voteconfig["farmy"]
+    if vote == "house":
+        ypos = voteconfig["turfheight"]*votes["house"]//voteconfig["turfsperline"] + voteconfig["housey"]
+    if vote == "woods":
+        ypos = voteconfig["turfheight"]*votes["woods"]//voteconfig["turfsperline"] + voteconfig["woodsy"]
+    if vote == "art":
+        ypos = voteconfig["turfheight"]*votes["art"]//voteconfig["turfsperline"] + voteconfig["arty"]
+    if vote == "shop":
+        ypos = voteconfig["turfheight"]*votes["shop"]//voteconfig["turfsperline"] + voteconfig["shopy"]
+
+    xpos = voteconfig["turfwidth"] * votes[vote]%voteconfig["turfsperline"] 
+
+    if votes[vote]%5 == 0: 
+        linetype = "slant"
+        xpos -= 5*voteconfig["turfwidth"]
+        ypos += 1*voteconfig["turfheight"]/5
+        xpos2 = xpos+=6*voteconfig["turfwidth"]
+        ypos2 = ypos += 3*voteconfig["turfheight"]/5
+    else:
+        linetype = straight
+        xpos2 = xpos
+        ypos2 = ypos + voteconfig["turfheight"]
+
+    goto(xpos,ypos, speed=None)
+    line(xpos2, ypos2)
+
 def oscword(address, *args):
     global oscqueue, oscloop
     oscloop = True
@@ -263,8 +356,10 @@ async def oscPLT(oscqueue):
                 print("playing OSCloop", str(oscqueue.qsize()), str(oscloop))
                 plt = oscqueue.get()
                 print(plt)
-                if plt["cmd"] == "mode":
-                    if state["mode"] = plt["par"]
+                if plt["cmd"] == "test":
+                    rectangle(100,100)
+                # if plt["cmd"] == "mode":
+                #     if state["mode"] = plt["par"]
                 # else:
                 #     if state["mode"] = "control"
                 #         if plt["cmd"] == ""
@@ -323,8 +418,15 @@ print(ports)
 
 ## init plotter
 print("init plotter")
-# initPlotter()
-# initPen()
+initPlotter()
+initPen()
+
+
+
+## load database status
+
+
+
 
 # print("GOING, ", gotoXYinTime(200,200,10000))
 
@@ -374,7 +476,8 @@ oscqueue = Queue()
   
         
 async def main():
-    global oscqueue    
+    global oscqueue, votes
+    loadData()
     oscdaemon = Thread(target=asyncio.run , args=(oscPLT(oscqueue),), daemon=True, name='oscPLT')
     oscdaemon.start()
     

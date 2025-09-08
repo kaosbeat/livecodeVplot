@@ -5,8 +5,10 @@ config = {
         "ip": "0.0.0.0",
         "port": 1137  
     },
+    "mode": "serial",
     "serial":{
-        "dev": '/dev/ttyUSB0', 
+        # "dev": '/dev/ttyUSB0', 
+        "dev": '/dev/pts/4', 
         "speed":115200, 
         "timeout":2
     },
