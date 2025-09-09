@@ -80,3 +80,5 @@ sudo rfcomm bind rfcomm0  20:13:07:25:34:59
 ## create GCODE file for DIY ploytter
 
 vpype read kaos/output/kata225.svg gscrib --config=plotterXY_config.toml --output=output.gcode
+
+sed -i 's/Z5/Z0/g' testimages.gcode 
