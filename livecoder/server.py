@@ -8,6 +8,8 @@ from threading import Event
 from threading import Thread
 from queue import Queue
 from rtmidi.midiutil import open_midiinput, list_input_ports
+from lib.midiinitiutil import available_inports_list, connectMidi
+from lib.midiparser import parseMsg
 import mido
 from configdata import config
 from pythonosc.osc_server import AsyncIOOSCUDPServer
@@ -25,15 +27,15 @@ elif config["mode"] == "virtual":
     # ser = "/dev/pts/2"
 
 voteconfig = {
-    turfsperline = 100
-    turfwidth = 10
-    turfheight = 40
-    turfspace = 20
-    farmy = 100
-    housey = 200
-    woodsy = 300
-    arty = 400
-    shopy = 500   
+    "turfsperline" : 100,
+    "turfwidth" : 10,
+    "turfheight" : 40,
+    "turfspace": 20,
+    "farmy" : 100,
+    "housey" : 200,
+    "woodsy" : 300,
+    "arty": 400,
+    "shopy" : 500 
 }
 
 print("getting ready")
@@ -122,6 +124,7 @@ def remove_eol_chars(string):
 
 def wait_for_movement_completion(ser,cleaned_line):
     Event().wait(0.005)
+    print("about to send", cleaned_line)
     if cleaned_line != '$X' or '$$':
         idle_counter = 0
         while True:
@@ -170,7 +173,7 @@ def initPlotter():
         G17 ; XY plane
         G94 ; units per minute feed rate mode
         M3 S555 ; Turning on spindle
-        G0 X0 Y0 ; Go to zero location
+        G0 X0 Y0 F1500 ; Go to zero location
         G04P0.01 ; timeout sync
         '''
     stream_gcode(ser,gcode)
@@ -328,8 +331,8 @@ def turf(vote):
         linetype = "slant"
         xpos -= 5*voteconfig["turfwidth"]
         ypos += 1*voteconfig["turfheight"]/5
-        xpos2 = xpos+=6*voteconfig["turfwidth"]
-        ypos2 = ypos += 3*voteconfig["turfheight"]/5
+        xpos2 = xpos+6*voteconfig["turfwidth"]
+        ypos2 = ypos+3*voteconfig["turfheight"]/5
     else:
         linetype = straight
         xpos2 = xpos
@@ -411,16 +414,51 @@ def gotoXYinTime(x,y,ms):
         return config['plotter']["fspeed"]
 
 
+
+def input_callback(msg):
+    print("MESSAGE RECEIVED", msg)
+
 ## init Midi
 print("init Midi")
 ports = mido.get_input_names()
 print(ports)
+# inport = mido.open_input('Teensy MIDI:Teensy MIDI Port 1 24:0', callback=input_callback)
+
+# mididevices = available_inports_list()
+## put alle devices in list
+port_name = 'Teensy MIDI:Teensy MIDI Port 1 24:0'
+print(port_name)
+# print(mididevices)
+midiin, port_name = open_midiinput(port_name)
+
+
+class MidiInputHandler(object):
+    global ticks
+
+    def __init__(self, port):
+        self.port = port
+        # self._wallclock = time.time()
+
+    def __call__(self, event, data=None):
+        message, deltatime = event
+        # self._wallclock += deltatime
+        # print("[%s] @%0.6f %r" % (self.port, self._wallclock, message))
+        print(message[2])
+        if message[1] == 1 and message[2] == 127:
+            goto(100,100)
+            line(60,60)
+
+        # parseMsg(event, deltatime)  ### needs to be rtmidi msg obj? not event?
+
+    #         parseNote   On(message)
+
+
+
 
 ## init plotter
 print("init plotter")
 initPlotter()
 initPen()
-
 
 
 ## load database status
@@ -477,23 +515,27 @@ oscqueue = Queue()
         
 async def main():
     global oscqueue, votes
+    global midiin
+    midiin.set_callback(MidiInputHandler(port_name))
+    print("midi callback enabled")
     loadData()
     oscdaemon = Thread(target=asyncio.run , args=(oscPLT(oscqueue),), daemon=True, name='oscPLT')
     oscdaemon.start()
     
     try:
-        print("initializing osc client")
-        oscserver = AsyncIOOSCUDPServer((oscip, oscport), dispatcher, asyncio.get_event_loop())
-        transport, protocol = await oscserver.create_serve_endpoint()  # Create datagram endpoint and start serving
+        # print("initializing osc client")
+        # oscserver = AsyncIOOSCUDPServer((oscip, oscport), dispatcher, asyncio.get_event_loop())
+        # transport, protocol = await oscserver.create_serve_endpoint()  # Create datagram endpoint and start serving
         await loop()
-        
-        transport.close() 
+        # transport.close() 
         
     except KeyboardInterrupt:
         print('killed by keyboard')
         transport.close()
     finally:
         print("closing") 
+        midiin.close_port()
+        del midiin
 
 if __name__ == "__main__":
     asyncio.run(main())
