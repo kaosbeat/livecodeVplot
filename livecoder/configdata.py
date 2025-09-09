@@ -7,8 +7,8 @@ config = {
     },
     "mode": "serial",
     "serial":{
-        # "dev": '/dev/ttyUSB0', 
-        "dev": '/dev/pts/4', 
+        "dev": '/dev/ttyUSB0', 
+        # "dev": '/dev/pts/4', 
         "speed":115200, 
         "timeout":2
     },
