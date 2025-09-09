@@ -150,7 +150,8 @@ grbl.cnect("/dev/ttyUSB0", 115200)
 grbl.poll_start()
 
 print("ABOUT TO START HOMING")
-grbl.killalarm()
+if grbl.cmode == 'Alarm':
+    grbl.killalarm()
 grbl.homing()
 
 

@@ -1,5 +1,5 @@
 [Unit]
-Description=Neighbor Web Server
+Description=Polldrawer for VPlotter
  
 [Service]
 Type=forking

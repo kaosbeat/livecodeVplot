@@ -16,6 +16,13 @@ grbl.setup_logging()
 grbl.cnect("/dev/ttyUSB0", 115200)
 grbl.poll_start()
 
+grbl.request_settings()
+
+
 print("ABOUT TO START HOMING")
-# grbl.killalarm()
+#grbl.killalarm()
 grbl.homing()
+
+grbl.disconnect()
+
+
