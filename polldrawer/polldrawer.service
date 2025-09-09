@@ -1,0 +1,15 @@
+[Unit]
+Description=Neighbor Web Server
+ 
+[Service]
+Type=forking
+ExecStart=/usr/bin/bash --login /home/kaos/livecodeVplot/polldrawer/polldrawer.sh
+WorkingDirectory=/home/kaos/livecodeVplot/polldrawer
+StandardOutput=inherit
+StandardError=inherit
+Restart=on-failure
+User=kaos
+Killmode=process
+ 
+[Install]
+WantedBy=multi-user.target
