@@ -35,7 +35,6 @@ state = {
     "toolhead": "init"
 }
 
-# votes = {'farm': 0, 'house': 0, 'woods': 0, 'art': 0, 'shop': 0, 'status': 'done'}
 
 
 def goto(x,y, speed=1000):
@@ -58,12 +57,12 @@ def line(x,y,speed=1000):
     grbl.poll_start()
     gcode='''
     G90 ; absolute coordinates
-    G21 Z5 F1000;
-    G1 X{x} Y{y} F{speed}
-    G21 Z5 F1000;
+    G21 Z1 F1000;
+    G1 X{x} Y{y} F{speed};
+    G21 Z-1 F1000;
     '''.format(x=x, y=y, speed=speed )
     grbl.write(gcode)
-    print("starting command")
+    print("starting line command", gcode)
     grbl.job_run()
 
 ## drawingfunctions
@@ -86,7 +85,7 @@ def turf(vote):
 
     # xpos = voteconfig["turfwidth"] * votes[vote]%voteconfig["turfsperline"] 
 
-    ypos = config["turfy"] + config["turfwidth"]*votes["farm"]//config["turfsperline"]
+    ypos = config["turfy"] + config["turfwidth"]*(votes["farm"]%config["turfsperline"])
 
     if votes[vote]%5 == 0: 
         # linetype = "slant"
@@ -99,9 +98,9 @@ def turf(vote):
         xpos2 = xpos + config["turfheight"]
         ypos2 = ypos
     print("about to go", xpos, ypos, xpos2, ypos2)
-    goto(xpos,ypos, speed=100)
-    line(xpos2, ypos2, 100)
-    goto(config["startx"], config("starty"), speed=100)
+    goto(xpos,ypos, 1000)
+    line(xpos2, ypos2, 1000)
+    goto(config["startx"], config("starty"), 1000)
 
 
 
@@ -150,8 +149,7 @@ grbl.cnect("/dev/ttyUSB0", 115200)
 grbl.poll_start()
 
 print("ABOUT TO START HOMING")
-if grbl.cmode == 'Alarm':
-    grbl.killalarm()
+grbl.killalarm()
 grbl.homing()
 
 
@@ -177,6 +175,9 @@ def loadData():
     print("loading data")
     with open("votes.pickle", 'rb') as inp:
         votes = pickle.load(inp)
+        # votes = {'farm': 0, 'house': 0, 'woods': 0, 'art': 0, 'shop': 0, 'status': 'done'}
+        # save_object(votes, "votes.pickle")
+
         print(votes)
 
 
@@ -248,7 +249,7 @@ class MidiInputHandler(object):
             if message[1] == 4 and message[2] == 127:
                 vote = "woods"
             if message[1] == 5 and message[2] == 127:
-                vote = "farm"
+                vote = "shop"
             print(vote)
             turf(vote)
         else:
