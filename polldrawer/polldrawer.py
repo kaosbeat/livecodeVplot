@@ -21,14 +21,14 @@ config = {
     "startspeed" : 1000,
     "turfsperline" : 100,
     "turfwidth" : 10,
-    "turfheight" : 40,
+    "turfheight" : 30,
     "turfspace": 20,
     "turfy": 210,
-    "farmx" : 210,
-    "housex" : 320,
-    "woodsx" : 430,
-    "artx": 540,
-    "shopx" : 650 
+    "farmx" : 205,
+    "housex" : 310,
+    "artx": 430,
+    "woodsx" : 540,
+    "shopx" : 690 
 }
 
 state = {
@@ -149,7 +149,7 @@ grbl.cnect("/dev/ttyUSB0", 115200)
 grbl.poll_start()
 
 print("ABOUT TO START HOMING")
-grbl.killalarm()
+# grbl.killalarm()
 grbl.homing()
 
 
@@ -222,8 +222,7 @@ def available_inports_list(ports=None, midiio=None, api=rtmidi.API_UNSPECIFIED):
     return portsdict
 
 class MidiInputHandler(object):
-    global ticks
-
+    global votes
     def __init__(self, port):
         self.port = port
         # self._wallclock = time.time()
@@ -240,6 +239,8 @@ class MidiInputHandler(object):
         # print(message[2])
         if votes["status"] == "done":
             votes["status"] = "updating"
+            save_object(votes, "votes.pickle")
+            
             if message[1] == 1 and message[2] == 127:
                 vote = "farm"
             if message[1] == 2 and message[2] == 127:
